@@ -1,0 +1,75 @@
+skill:
+  id: local-opportunity-radar-kashmir
+  name: Local Opportunity Radar (Kashmir)
+  version: 0.1.0
+  visibility: public
+  maturity: stable
+  description: >
+    Kashmir-specific opportunity intelligence engine that aggregates local government, NGO, and informal postings and filters them by real user eligibility.
+  author:
+    name: syer
+  license: Apache-2.0
+  tags:
+    - kashmir
+    - jobs
+    - opportunities
+    - intelligence
+  runtime:
+    type: scheduled_background
+    requires_persistence: true
+    isolation: strict
+    entrypoint:
+      handler: lor.main
+      language: python
+      python_version: ">=3.10"
+  permissions:
+    filesystem:
+      read:
+        - ~/.openclaw/lor/sources/*
+        - ~/.openclaw/user/profile.yaml
+      write:
+        - ~/.openclaw/lor/cache/*
+        - ~/.openclaw/lor/reports/*
+    network:
+      outbound: true
+    execution:
+      shell: false
+  configuration:
+    schema:
+      district:
+        type: string
+        required: true
+        description: Target district in Kashmir
+      alert_threshold:
+        type: float
+        default: 0.65
+        description: Minimum eligibility score to trigger an alert
+      hide_ineligible:
+        type: boolean
+        default: true
+        description: Whether to hide opportunities that do not match the profile
+  safety:
+    guarantees:
+      - no_fake_opportunities
+      - no_affiliate_bias
+      - no_data_resale
+      - no_commitment_authority
+    enforcement: hard
+  memory:
+    strategy: distilled
+    retention_days: 14
+    redact_sensitive: true
+  interfaces:
+    inbound_events:
+      - schedule.daily
+      - source.updated
+    outbound_actions:
+      - report.generate
+      - user.notify
+  commands:
+    - name: lor.today
+      description: Show today’s eligible opportunities
+    - name: lor.week
+      description: Weekly opportunity forecast
+    - name: lor.alerts
+      description: Toggle instant alerts

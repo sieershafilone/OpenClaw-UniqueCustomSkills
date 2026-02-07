@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from blacksnow_test import Normalizer, Accumulator, Forecaster, Packager, RiskPrimitive
 from harvester import harvest_all_sources
+from harvester_extended import harvest_all_extended
 from memory import BlackSnowMemory
 
 # ============================================================================
@@ -49,7 +50,11 @@ def run_full_pipeline(webhook_url: str = None, verbose: bool = True) -> dict:
         print("=" * 60)
         print("\n[1/7] HARVEST: Collecting live signals...")
     
+    # Harvest from both basic and extended sources
     raw_signals = harvest_all_sources()
+    extended_signals = harvest_all_extended()
+    raw_signals.extend(extended_signals)
+    
     results["stages"]["harvest"] = {"count": len(raw_signals)}
     
     # Store raw signals

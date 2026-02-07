@@ -6,17 +6,16 @@ import re
 import subprocess
 from pathlib import Path
 
-# Add spotify-surface scripts to path for import
-sys.path.append(str(Path(__file__).parent.parent / "spotify-surface" / "scripts"))
-import spotify_surface
-
 def log_output(message):
     print(f"[Media Orchestrator] {message}", file=sys.stderr)
 
 def main(request_type: str, query: str, output_format: str = None, resolution: str = None, chat_target: str = None, media_type: str = None):
     workspace = Path("/home/ky11rie/.openclaw/workspace")
-    
-    log_output(f"Processing request: {request_type}, Query: '{query}', Format: {output_format}, Resolution: {resolution}, Target: {chat_target}, Media Type: {media_type}")
+
+    # Check for ffmpeg
+    has_ffmpeg = subprocess.run(["which", "ffmpeg"], capture_output=True).returncode == 0
+    if not has_ffmpeg:
+        log_output("ffmpeg/ffprobe not found. Using fallback formats (m4a/mp4 direct).")
 
     # Handle Spotify requests
     if "spotify" in request_type.lower() or "spotify" in query.lower():
@@ -44,23 +43,32 @@ def main(request_type: str, query: str, output_format: str = None, resolution: s
     download_filename = ""
     yt_dlp_format_string = ""
     if media_type == "audio" or output_format == "mp3":
-        download_filename = f"{re.sub(r'[^a-zA-Z0-9_]', '_', query)}_Audio.mp3"
-        yt_dlp_format_string = "-x --audio-format mp3"
+        if has_ffmpeg:
+            download_filename = f"{re.sub(r'[^a-zA-Z0-9_]', '_', query)}_Audio.mp3"
+            yt_dlp_format_string = "-x --audio-format mp3"
+        else:
+            # Fallback to high quality m4a audio stream
+            download_filename = f"{re.sub(r'[^a-zA-Z0-9_]', '_', query)}_Audio.m4a"
+            yt_dlp_format_string = "-f 140"
     elif media_type == "video" and output_format == "mp4":
         download_filename = f"{re.sub(r'[^a-zA-Z0-9_]', '_', query)}_Video.mp4"
-        if resolution:
-            # Example: 480p -> bestvideo[height<=480][ext=mp4]
-            yt_dlp_format_string = f"-f \"bestvideo[height<={resolution.replace('p', '')}][ext=mp4]+bestaudio[ext=m4a]/best[height<={resolution.replace('p', '')}][ext=mp4]\""
+        if has_ffmpeg:
+            if resolution:
+                # Example: 480p -> bestvideo[height<=480][ext=mp4]
+                yt_dlp_format_string = f"-f \"bestvideo[height<={resolution.replace('p', '')}][ext=mp4]+bestaudio[ext=m4a]/best[height<={resolution.replace('p', '')}][ext=mp4]\""
+            else:
+                yt_dlp_format_string = "-f \"bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]\""
         else:
-            yt_dlp_format_string = "-f \"bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]\""
+            # Fallback to combined mp4 format (usually 360p or 720p) to avoid merging requirement
+            yt_dlp_format_string = "-f 18/22"
     else:
         message_user(chat_target, f"Unsupported media type or format requested: {media_type} {output_format}", chat_target.startswith("+"))
         return
 
     download_path = workspace / download_filename
     yt_dlp_command = [
-        "python3", "-m", "yt_dlp",
-        yt_dlp_format_string,
+        "python3", "-m", "yt_dlp"
+    ] + yt_dlp_format_string.split() + [
         "-o", str(download_path),
         f"ytsearch1:{query}"
     ]
@@ -90,7 +98,7 @@ def message_user(target: str, text: str = None, is_whatsapp: bool = False, file_
         cmd_prefix.extend(["--channel", "telegram", "--target", target])
     
     if file_path:
-        cmd_prefix.extend(["--file", file_path])
+        cmd_prefix.extend(["--media", file_path])
         # WhatsApp media needs a small message or it can fail sometimes
         cmd_prefix.extend(["--message", "."]) # Minimal message
     elif text:

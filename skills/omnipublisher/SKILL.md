@@ -1,68 +1,72 @@
 ---
 name: omnipublisher
-description: The ultimate cross-platform content distribution and messaging engine. Supports automated content mutation, scheduling, and anti-detection compliance guards.
+description: Multi-platform content publisher for social media and messaging channels with compliance guards, scheduling, and platform-specific adaptation.
 ---
 
-# OmniPublisher (Nuclear Edition)
+# OmniPublisher (Nuclear Edition) v1.1.0
 
-OmniPublisher is a heavy-duty multi-channel content orchestrator. It manages the lifecycle of a post or message from synthesis to multi-platform distribution, ensuring compliance, engagement optimization, and stealth.
+Automated reel, short, long video, image, and text distribution for high-bandwidth operations.
 
-## 🚀 Nuclear Features
+## ⚖️ Terms of Service & Constraints (Non-Negotiable)
 
-- **Multi-Platform Distribution**: Twitter, Instagram, YouTube, Facebook, Telegram, and WhatsApp.
-- **Content Mutation Engine**: Automatically rewrites captions and adjusts hashtags based on platform culture (e.g., professional for LinkedIn, minimal for X, emoji-dense for Insta).
-- **Stealth Jitter & Windowing**: Beyond simple delays, uses probabilistic "windows" to simulate human activity and bypass bot detection.
-- **Media Transcoding**: Auto-resizes and optimizes media (images/videos) to fit platform-specific aspect ratios and file size limits.
-- **Drip & Sequential Logic**: Support for multi-step "drip" campaigns with recipient-level cooldown tracking.
-- **Identity Proxying**: Seamlessly integrates with `agent-doppelganger` for personalized recipient interactions.
-- **Engagement Loop**: Ingests platform feedback (likes, views, errors) back into workspace memory to improve future distribution strategies.
+- **Shadow/Unofficial APIs**: Strictly forbidden. Uses official Bot APIs or Business APIs only.
+- **Bypassing**: No bypassing of platform security or human-verification systems.
+- **Robotic Scheduling**: Prohibited. All scheduling must use jitter/windowing to maintain human-like patterns.
+- **Content**: No monolithic blasts. Content is mutated per platform to fit native culture.
 
-## 🛠️ Commands
+## 🏗️ Architecture
 
-| Command | Action |
-|---------|--------|
-| `publish.now <content>` | Instant blast to all default platforms |
-| `publish.schedule <json>` | Advanced scheduled run with windowing |
-| `publish.status <run_id>` | Check progress of a distribution job |
-| `publish.cooldown <target>` | Check or reset cooldown for a specific recipient |
+- **Content Normalizer**: Adapts single input to platform-specific limits (X: 280 chars, Insta: hashtags, YT: title/desc).
+- **Media Processor**: FFmpeg pipeline for aspect ratio (9:16 vs 16:9), duration trimming, and compression.
+- **Platform Router**: Handles individual adapter lifecycle and failures.
+- **Compliance Guard**: Anti-blast protection, content hashing, and rate-limit proximity detection.
+- **Audit Logger**: Detailed success/failure history with replay support.
 
-## 🛡️ Compliance Guards
+## 🛠️ Platform Rules
 
-- ❌ **Anti-Blast**: Prevents identical content hashes from being sent to the same recipient.
-- ❌ **Bulk Protection**: Limits the number of targets per platform per hour.
-- ✅ **Opt-in Ledger**: Tracks recipient opt-out status across all messaging channels.
-- ✅ **Dynamic Jitter**: Injects 20-30% random noise into every scheduled timing.
+| Platform | Video Limit | Image | Text Limit |
+|----------|-------------|-------|------------|
+| **Twitter (X)** | ≤140s | ✔️ | ≤280 chars |
+| **Instagram** | Reels (≤90s) | ✔️ | hashtags req |
+| **YouTube** | Shorts (≤60s) | ✔️ | Title + Desc |
+| **Facebook** | Standard | ✔️ | Links allowed |
+| **Telegram** | Standard | ✔️ | MD/HTML |
+| **WhatsApp** | Standard | ✔️ | Caption req |
 
-## 🧩 Schema (Nuclear Payload)
+## 🚀 Messaging Integration
+
+### Telegram (Bot API)
+- **Supported**: Text, Image, Video, Channel/Group posting.
+- **Interface**: `sendText`, `sendPhoto`, `sendVideo`.
+- **Note**: Uses `telegram_bot_token`.
+
+### WhatsApp (Business API)
+- **Supported**: Text, Image, Video, Captioned Media.
+- **Interface**: `sendMessage`, `sendMedia`.
+- **Note**: Requires approved provider. Template messages enforced for cold outreach.
+
+## 🧩 Compliance Logic
+
+- ❌ **No Bulk Cold Messaging**: Messaging is limited to opted-in targets.
+- ❌ **No Identical Blast Timing**: Staggered windows are mandatory.
+- ✅ **Per-Recipient Jitter**: Even in windows, each message has a unique offset.
+- ✅ **Opt-in Ledger**: `if recipient.lastMessage < cooldown: skip(recipient)`.
+
+## invocation Example
 
 ```json
 {
   "skill": "omnipublisher",
-  "content": {
-    "type": "video",
-    "path": "./launch_clip.mp4",
-    "optimize": true
-  },
-  "metadata": {
-    "base_caption": "The new system is live.",
-    "hashtags": ["tech", "ai", "future"]
-  },
-  "platforms": ["twitter", "telegram", "whatsapp"],
+  "content": { "type": "image", "path": "./launch.png" },
+  "caption": "Launch is live.",
+  "platforms": ["telegram", "whatsapp"],
   "targets": {
-    "telegram": { "chats": ["@my_channel"] },
+    "telegram": { "chats": ["@mychannel"] },
     "whatsapp": { "recipients": ["+91XXXXXXXXXX"] }
   },
-  "strategy": {
+  "schedule": {
     "mode": "window",
-    "window": { "min_delay": 300, "max_delay": 1200 },
-    "mutate_content": true
+    "window": { "min_delay": 120, "max_delay": 900 }
   }
 }
 ```
-
-## 📂 Structure
-
-- `adapters/`: Individual platform handlers (bot API, cloud API, CLI).
-- `guards/`: Anti-spam, rate-limiting, and PII filters.
-- `scripts/`: Content mutation and media optimization logic.
-- `templates/`: Platform-specific caption templates.

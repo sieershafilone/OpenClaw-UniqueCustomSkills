@@ -1,51 +1,87 @@
 skill:
+  name: omnipublisher
   id: omnipublisher
-  name: OmniPublisher
-  tagline: "Nuclear content distribution & messaging"
-  version: 1.0.0
-  maturity: robust
-  category: "Communications / Marketing"
+  version: 1.1.0
+  tagline: "Nuclear multi-platform orchestrator"
+  description: >
+    Multi-platform content publisher for social media and messaging channels with 
+    compliance guards, scheduling, and platform-specific adaptation.
+  owner: openclaw
+  runtime: python3
+  scope: outbound_communication
+  triggers:
+    - manual
+    - scheduled
+    - webhook
 
-ownership:
-  author: openclaw-labs
-  license: proprietary
+permissions:
+  network:
+    outbound: true
+  filesystem:
+    read: true
 
-description:
-  short: >
-    The ultimate cross-platform content distribution and messaging engine.
-  long: >
-    OmniPublisher orchestrates multi-channel publishing with platform-specific content
-    mutation, advanced scheduling, and stealth-mode compliance guards to ensure 
-    maximum reach without detection risks.
+secrets:
+  - twitter_api
+  - instagram_api
+  - youtube_api
+  - facebook_api
+  - telegram_bot_token
+  - whatsapp_provider_token
 
-capabilities:
-  - multi-channel-sync
-  - content-mutation
-  - stealth-jittering
-  - media-optimization
-  - drip-automation
+inputs:
+  content:
+    type: object
+    required: true
+    properties:
+      type:
+        enum: [text, image, video]
+      path:
+        type: string
+        description: local path or remote URL
+      mime:
+        type: string
+      caption:
+        type: string
+        maxLength: 5000
+  platforms:
+    type: array
+    items:
+      enum:
+        - twitter
+        - instagram
+        - youtube
+        - facebook
+        - telegram
+        - whatsapp
+  targets:
+    type: object
+    description: Messaging destinations
+    properties:
+      telegram:
+        chats:
+          type: array
+          items: string
+      whatsapp:
+        recipients:
+          type: array
+          items: string
+  schedule:
+    type: object
+    properties:
+      mode:
+        enum: [now, delayed, window]
+      delay_seconds:
+        type: number
+      window:
+        min_delay: number
+        max_delay: number
 
-platforms:
-  - twitter
-  - instagram
-  - youtube
-  - facebook
-  - telegram
-  - whatsapp
+outputs:
+  status:
+    enum: [success, partial, failed]
+  report:
+    type: object
 
 limits:
   max_platforms_per_run: 6
   max_media_size_mb: 2048
-  rate_limit_per_hour: 50 # per platform
-
-config:
-  - key: TELEGRAM_BOT_TOKEN
-    description: "Bot API token for Telegram distribution"
-  - key: WHATSAPP_API_PROVIDER
-    description: "Meta Cloud API or Twilio credentials"
-  - key: SOCIAL_AUTH_COOKIES
-    description: "Path to encrypted browser cookies for social platforms"
-
-status:
-  deployment: workspace
-  audit_required: true

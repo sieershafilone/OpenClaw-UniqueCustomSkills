@@ -9,6 +9,7 @@ import os
 import json
 import time
 import random
+import subprocess
 from pathlib import Path
 
 # Add relative paths to sys.path for local imports
@@ -71,11 +72,38 @@ class OmniPublisher:
         Connects to actual channel tools (message, bird, etc.)
         """
         print(f"[ADAPTER] Routing payload to {platform}...")
-        if target_group:
-            print(f"    [TARGETS] {target_group}")
-        print(f"    [TEXT] {str(text)[:60]}...")
-        if media:
-            print(f"    [MEDIA] {media}")
+        
+        # 1. Twitter (X) - uses bird skill
+        if platform == "twitter":
+            cmd = ["bird", "tweet", text]
+            if media:
+                cmd.extend(["--media", media])
+            print(f"    [EXEC] {' '.join(cmd)}")
+            subprocess.run(cmd)
+
+        # 2. Telegram - uses openclaw message tool
+        elif platform == "telegram":
+            chats = target_group.get("chats", [])
+            for chat in chats:
+                cmd = ["openclaw", "message", "send", "--channel", "telegram", "--target", chat, "--message", text]
+                if media:
+                    cmd.extend(["--file", media])
+                print(f"    [EXEC] {' '.join(cmd)}")
+                subprocess.run(cmd)
+
+        # 3. WhatsApp - uses openclaw message tool
+        elif platform == "whatsapp":
+            recipients = target_group.get("recipients", [])
+            for rec in recipients:
+                cmd = ["openclaw", "message", "send", "--channel", "whatsapp", "--target", rec, "--message", text]
+                if media:
+                    cmd.extend(["--file", media])
+                print(f"    [EXEC] {' '.join(cmd)}")
+                subprocess.run(cmd)
+
+        else:
+            print(f"    [WARN] No live adapter configured for {platform}. Mocking output.")
+            print(f"    [TEXT] {str(text)[:60]}...")
 
 if __name__ == "__main__":
     pub = OmniPublisher("/home/ky11rie/.openclaw/workspace")

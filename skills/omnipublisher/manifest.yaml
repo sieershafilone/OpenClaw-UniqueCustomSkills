@@ -1,0 +1,51 @@
+skill:
+  id: omnipublisher
+  name: OmniPublisher
+  tagline: "Nuclear content distribution & messaging"
+  version: 1.0.0
+  maturity: robust
+  category: "Communications / Marketing"
+
+ownership:
+  author: openclaw-labs
+  license: proprietary
+
+description:
+  short: >
+    The ultimate cross-platform content distribution and messaging engine.
+  long: >
+    OmniPublisher orchestrates multi-channel publishing with platform-specific content
+    mutation, advanced scheduling, and stealth-mode compliance guards to ensure 
+    maximum reach without detection risks.
+
+capabilities:
+  - multi-channel-sync
+  - content-mutation
+  - stealth-jittering
+  - media-optimization
+  - drip-automation
+
+platforms:
+  - twitter
+  - instagram
+  - youtube
+  - facebook
+  - telegram
+  - whatsapp
+
+limits:
+  max_platforms_per_run: 6
+  max_media_size_mb: 2048
+  rate_limit_per_hour: 50 # per platform
+
+config:
+  - key: TELEGRAM_BOT_TOKEN
+    description: "Bot API token for Telegram distribution"
+  - key: WHATSAPP_API_PROVIDER
+    description: "Meta Cloud API or Twilio credentials"
+  - key: SOCIAL_AUTH_COOKIES
+    description: "Path to encrypted browser cookies for social platforms"
+
+status:
+  deployment: workspace
+  audit_required: true

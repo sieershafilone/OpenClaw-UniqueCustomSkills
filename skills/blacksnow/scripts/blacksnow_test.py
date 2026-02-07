@@ -16,15 +16,22 @@ import random
 # ============================================================================
 
 ONTOLOGY = {
-    "infra.energy.grid": ["grid", "power", "electricity", "outage", "transmission"],
-    "infra.energy.oil": ["oil", "petroleum", "crude", "refinery", "pipeline"],
-    "infra.transport.rail": ["rail", "railway", "train", "freight", "locomotive"],
-    "infra.transport.port": ["port", "shipping", "container", "maritime", "dock"],
-    "labor.union": ["union", "strike", "grievance", "collective", "bargaining"],
-    "labor.attrition": ["resignation", "attrition", "turnover", "layoff", "departure"],
-    "legal.regulation": ["regulation", "compliance", "draft", "consultation", "amendment"],
-    "supply.procurement": ["tender", "procurement", "contract", "bid", "rfp", "award"],
-    "supply.inventory": ["inventory", "stockpile", "shortage", "buffer", "warehouse"],
+    "infra.energy.grid": ["grid", "power", "electricity", "outage", "transmission", "utility", "blackout"],
+    "infra.energy.oil": ["oil", "petroleum", "crude", "refinery", "pipeline", "fuel", "gas"],
+    "infra.transport.rail": ["rail", "railway", "train", "freight", "locomotive", "amtrak"],
+    "infra.transport.port": ["port", "shipping", "container", "maritime", "dock", "cargo", "vessel"],
+    "infra.transport.aviation": ["airport", "aviation", "flight", "airline", "faa", "aircraft"],
+    "infra.transport.road": ["highway", "bridge", "road", "traffic", "trucking", "dot"],
+    "labor.union": ["union", "strike", "grievance", "collective", "bargaining", "nlrb", "workers"],
+    "labor.attrition": ["resignation", "attrition", "turnover", "layoff", "departure", "fired", "quit"],
+    "legal.regulation": ["regulation", "compliance", "draft", "consultation", "amendment", "rule", "policy"],
+    "supply.procurement": ["tender", "procurement", "contract", "bid", "rfp", "award", "solicitation"],
+    "supply.inventory": ["inventory", "stockpile", "shortage", "buffer", "warehouse", "supply chain"],
+    "emergency.disaster": ["disaster", "emergency", "storm", "hurricane", "tornado", "flood", "fire", "wildfire", "earthquake", "tsunami", "fema", "evacuation", "shelter"],
+    "emergency.weather": ["winter storm", "blizzard", "ice storm", "severe weather", "heat wave", "drought", "snow", "freeze"],
+    "emergency.public_health": ["pandemic", "outbreak", "epidemic", "quarantine", "public health", "cdc", "contamination"],
+    "finance.credit": ["credit", "default", "bankruptcy", "debt", "loan", "mortgage", "foreclosure"],
+    "finance.market": ["market", "stock", "trading", "volatility", "crash", "recession", "inflation"],
 }
 
 SIGNAL_TYPES = {
@@ -35,6 +42,9 @@ SIGNAL_TYPES = {
     "attrition_spike": 0.9,
     "grievance_surge": 0.6,
     "inventory_buffer": 0.5,
+    "disaster_declaration": 0.95,
+    "emergency_response": 0.85,
+    "weather_event": 0.75,
 }
 
 # ============================================================================
@@ -156,6 +166,12 @@ class Normalizer:
             return "attrition_spike"
         if any(w in text_lower for w in ["extension", "consultation", "draft"]):
             return "language_shift"
+        if any(w in text_lower for w in ["disaster", "fema", "declaration", "declared"]):
+            return "disaster_declaration"
+        if any(w in text_lower for w in ["storm", "hurricane", "tornado", "flood", "blizzard", "ice storm", "winter storm"]):
+            return "weather_event"
+        if any(w in text_lower for w in ["evacuation", "shelter", "rescue", "response"]):
+            return "emergency_response"
         return "unknown"
 
 
@@ -206,6 +222,26 @@ class Forecaster:
                 {"event": "work_slowdown", "base_prob": 0.5},
                 {"event": "strike_action", "base_prob": 0.3},
                 {"event": "contract_renegotiation", "base_prob": 0.4},
+            ],
+            "emergency.disaster": [
+                {"event": "infrastructure_damage", "base_prob": 0.6},
+                {"event": "supply_chain_disruption", "base_prob": 0.5},
+                {"event": "insurance_claims_surge", "base_prob": 0.7},
+                {"event": "federal_aid_deployment", "base_prob": 0.4},
+            ],
+            "emergency.weather": [
+                {"event": "travel_disruption", "base_prob": 0.6},
+                {"event": "power_outage", "base_prob": 0.5},
+                {"event": "commodity_price_spike", "base_prob": 0.4},
+            ],
+            "infra.transport.port": [
+                {"event": "shipping_delays", "base_prob": 0.5},
+                {"event": "cargo_rerouting", "base_prob": 0.4},
+                {"event": "supply_shortage", "base_prob": 0.3},
+            ],
+            "infra.transport.rail": [
+                {"event": "freight_delays", "base_prob": 0.5},
+                {"event": "service_disruption", "base_prob": 0.4},
             ],
         }
         templates = outcome_templates.get(vector, [{"event": "disruption", "base_prob": 0.3}])

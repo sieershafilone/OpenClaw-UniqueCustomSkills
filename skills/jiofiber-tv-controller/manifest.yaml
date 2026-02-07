@@ -1,0 +1,22 @@
+skill:
+  id: jiofiber-tv-controller
+  name: JioFiberTVController
+  tagline: "Control JioFiber TV via text"
+  version: 0.1.0
+  maturity: experimental
+
+commands:
+  - name: tv.connect
+    description: "Connect to TV IP"
+    example: "tv.connect 192.168.1.10"
+  - name: tv.yt
+    description: "Search/Play YouTube"
+    example: "tv.yt Karan Aujla"
+  - name: tv.power
+    description: "Toggle Power"
+  - name: tv.play
+    description: "Play/Pause"
+
+config:
+  - key: TV_IP
+    description: "Default IP address of JioFiber TV"

@@ -1,0 +1,31 @@
+skill:
+  id: spotify-surface
+  name: Spotify Unified Audio Surface
+  tagline: "Spotify Discovery & Playback Sync"
+  version: 1.0.0
+  maturity: robust
+  category: "Multimedia"
+
+description:
+  short: >
+    Spotify integration for discovery and synchronized playback across Chat and WebUI.
+  long: >
+    Resolves track requests via Spotify Web API, persists metadata in workspace,
+    and emits synchronized outputs for Telegram/WhatsApp and the OpenClaw WebUI.
+    Fully compliant with Spotify ToS (no audio downloads).
+
+capabilities:
+  - track-resolution
+  - metadata-persistence
+  - chat-previews
+  - webui-sync
+
+config:
+  - key: SPOTIFY_CLIENT_ID
+    description: "Spotify API Client ID"
+  - key: SPOTIFY_CLIENT_SECRET
+    description: "Spotify API Client Secret"
+
+status:
+  deployment: workspace
+  audit_required: false
